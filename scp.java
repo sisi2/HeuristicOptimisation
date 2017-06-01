@@ -35,8 +35,10 @@ public class Scp_main {
 	private static List<List<String>> subsets;// = new
 												// ArrayList<List<String>>();
 	private static List<String> elements = new ArrayList<String>(); // To modify
-	private static List<Integer> containedOfeachLine = new ArrayList<Integer>(); // To
-																					// modify
+	private static List<List<String>> realSubsets = new ArrayList<List<String>>();
+	// private static List<Integer> containedOfeachLine = new
+	// ArrayList<Integer>(); // To
+	// modify
 	private static Map<String, List<List<String>>> setCoverElement = new HashMap<String, List<List<String>>>();
 	private static Map<Integer, List<String>> order;
 	static List<Integer> costs = new ArrayList<Integer>();
@@ -61,7 +63,7 @@ public class Scp_main {
 		// readDataFile("instance/example.txt");
 
 		setCovering();
-		//ConstructInitialSolution(false);
+		ConstructInitialSolution(true);
 		// redundancyElimination();
 		System.out.println(order);
 	}
@@ -96,7 +98,7 @@ public class Scp_main {
 
 			for (int i = 0; i < numberOfElements; ++i) {
 				int nb = scanner.nextInt();
-				containedOfeachLine.add(nb);
+				// containedOfeachLine.add(nb);
 				subsets.add(new ArrayList<String>());
 
 				for (int j = 0; j < nb; ++j) {
@@ -107,70 +109,55 @@ public class Scp_main {
 
 			/* Info of rows that are covered by each column */
 
-			// row = (int **) mymalloc(n*sizeof(int *));
 			List<List<Integer>> elts = new ArrayList<List<Integer>>();
 
-			// nrow = (int *) mymalloc(n*sizeof(int));
-			List<Integer> nElts = new ArrayList<Integer>();
-			// k = (int *) mymalloc(n*sizeof(int));
-			List<Integer> nbrElts = new ArrayList<Integer>();
-
-			for (int j = 0; j < numberOfSubsets; ++j)
-				nElts.add(0);
-			for (int i = 0; i < numberOfElements; ++i) {
-
-				for (int h = 0; h < containedOfeachLine.get(i); ++h) {
-					// nrow[col[i][h]]++;
-					int index = Integer.valueOf(subsets.get(i).get(h));
-					// System.out.println(index-1);
-					nElts.set(index - 1, nElts.get(index - 1) + 1);
-				}
-
-			}
 			for (int j = 0; j < numberOfSubsets; ++j) {
-				// row[j] = (int *) mymalloc(nrow[j]*sizeof(int));
-				// List<Integer> val = new ArrayList<Integer>(numberOfSubsets);
 				elts.add(new ArrayList<Integer>());
-				for (int init = 0; init < numberOfSubsets; ++init)
+
+				for (int i = 0; i < numberOfElements; ++i) {
 					elts.get(j).add(0);
-
-				nbrElts.add(0);
-			}
-			for (int i = 0; i < numberOfElements; ++i) {
-				for (int h = 0; h < containedOfeachLine.get(i); ++h) {
-					// row[col[i][h]][k[col[i][h]]] = i
-					int tmp = Integer.valueOf(subsets.get(i).get(h));
-					int ind = elts.get(tmp - 1).get(nbrElts.get(tmp - 1));
-
-					//System.out.println(nbrElts);
-					//elts.get(ind).add(i);
-					elts.get(tmp - 1).set(nbrElts.get(tmp - 1), i);
-					int index = Integer.valueOf(subsets.get(i).get(h));
-					nbrElts.set(index - 1, nElts.get(index - 1) + 1);
 				}
+			}
+			int covered = 0;
+			for (List<String> line : subsets) {
+
+				for (int columnCoverLine = 0; columnCoverLine < line.size(); ++columnCoverLine) {
+					int column = Integer.valueOf(line.get(columnCoverLine)) - 1;
+					elts.get(column).set(covered, 1);
+				}
+				++covered;
+			}
+
+			covered = 0;
+			for (List<Integer> subset : elts) {
+				realSubsets.add(new ArrayList<String>());
+				for (int elementInsubset = 0; elementInsubset < subset.size(); ++elementInsubset) {
+					if (subset.get(elementInsubset) == 1) {
+						String elementCover = String.valueOf(elementInsubset + 1);
+						realSubsets.get(covered).add(elementCover);
+					}
+				}
+				++covered;
 			}
 
 			// Weigths of each subset
-			System.out.println(elts.size());
-			System.out.println(containedOfeachLine);
-			/*
-			 * for (int value = 0; value < numberOfSubsets; ++value ) {
-			 * 
-			 * weightSubsets.put(subsets.get(value),
-			 * Float.valueOf(costs.get(value))); }
-			 */
+
+			for (int value = 0; value < numberOfSubsets; ++value) {
+
+				weightSubsets.put(realSubsets.get(value), Float.valueOf(costs.get(value)));
+			}
+
 			scanner.close();
 
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
-
 	}
 
 	public static void getElements() {
 		Set<String> elementsValue = new HashSet<>();
 
-		for (List<String> sets : subsets)
+		for (List<String> sets : realSubsets)
 
 			if (!elementsValue.containsAll(sets)) {
 
@@ -180,83 +167,31 @@ public class Scp_main {
 		for (String elt : elementsValue) {
 			elements.add(elt);
 		}
-		System.out.println(elements);
-
 	}
-
-	/*
-	 * public static void readDataFile2(String dataFile) {
-	 * 
-	 * Scanner scanner = new Scanner(new File(dataFile));
-	 * 
-	 * numberOfElements = scanner.nextInt(); numberOfSubsets =
-	 * scanner.nextInt();
-	 * 
-	 * List<Integer> costs = new ArrayList<Integer>();
-	 * 
-	 * for (int i = 0; i < numberOfSubsets; ++i) { costs.add(scanner.nextInt());
-	 * }
-	 * 
-	 * // Extraction of the subsets
-	 * 
-	 * else if (k >= 1) {
-	 * 
-	 * // String[] parts = line.split(" "); // subsets.add(new
-	 * ArrayList<String>()); // for (int s = 1; s < parts.length; s++) { // if
-	 * (parts.length > 1) { // subsets.get(k - 1).add(String.valueOf(parts[s]));
-	 * // } else // subsets.get(k - 1).add(String.valueOf(parts[s])); // }
-	 * valueOfElement.add(scanner.nextInt());
-	 * System.out.println(valueOfElement); }
-	 * 
-	 * ++k; sb.append(line); sb.append(System.lineSeparator()); line =
-	 * br.readLine(); } br.close(); scanner.close(); // Weigth of subsets for
-	 * (int value = 0; value < numberOfElements; ++value) {
-	 * 
-	 * if (subsets.get(value).size() == 1) break; for (int elt = 0; elt <
-	 * subsets.get(value).size(); ++elt) {
-	 * elements.add(subsets.get(value).get(elt)); }
-	 * 
-	 * } System.out.println(elements);
-	 * 
-	 * // Weigths of each subset int count = 0; for (int value = 0 ; value <
-	 * subsets.size(); ++value) { if( subsets.get(value).size() == 1){ ++count;
-	 * weightSubsets.put(subsets.get(value),
-	 * Float.valueOf(subsets.get(value).get(0)));
-	 * 
-	 * } //System.out.println(Float.valueOf(subsets.get(value).get(0)));
-	 * 
-	 * } //System.out.println(weightSubsets); //subsets.remove(0);
-	 * 
-	 * } catch (IOException e ) { e.printStackTrace();} }catch
-	 * (FileNotFoundException e1) { e1.printStackTrace(); } }
-	 */
 
 	// Info of subsets that cover each element
 
 	public static void setCovering() {
 		getElements();
 
-		for (String e : elements) {
+		for (String elementInSet : elements) {
 			List<List<String>> covering = new ArrayList<List<String>>();
-			for (List<String> set : subsets) {
+			for (List<String> set : realSubsets) {
 				for (int i = 0; i < set.size(); ++i) {
-					if (e.equals(set.get(i))) {
+					if (elementInSet.equals(set.get(i))) {
 						covering.add(set);
 					}
 				}
 			}
-			// covering.remove(0);
-			setCoverElement.put(e, covering);
+			setCoverElement.put(elementInSet, covering);
 		}
 	}
 
-	private static String initialSolution = "CH2";
-
-	/* Info of elements that are covered by each subset */
+	private static String initialSolution = "CH4";
 
 	// solution construction
 
-	private static Map ConstructInitialSolution(boolean redundancy) {
+	private static Map<Integer, List<String>> ConstructInitialSolution(boolean redundancy) {
 		order = new HashMap<Integer, List<String>>();
 		switch (initialSolution) {
 		case "CH1": // Random Solution construction
@@ -320,9 +255,6 @@ public class Scp_main {
 				tempSet = new HashMap<List<String>, Float>();
 				for (List<String> key : costBased.keySet()) {
 					if (CollectionUtils.removeAll(key, coverage).size() > 0) {
-						// System.out.println(key);
-						// System.out.println(costBased.get(key) /
-						// CollectionUtils.removeAll(key, coverage).size());
 						tempSet.put(key, costBased.get(key) / CollectionUtils.removeAll(key, coverage).size());
 					}
 				}
@@ -344,11 +276,12 @@ public class Scp_main {
 						break;
 					}
 				}
-				if (redundancy)
-					redundancyElimination(coverage);
 			}
+			if (redundancy)
+				redundancyElimination(coverage);
 			break;
 		}
+		System.out.println("SSSSSSS" + order);
 		return order;
 	}
 
@@ -357,7 +290,7 @@ public class Scp_main {
 		coverage = new HashSet<>();
 		Map<List<String>, Float> costBased = new HashMap<List<String>, Float>();
 		Float greedyValue = 0F;
-		// copy the subset of weights into a temporay map
+		// copy the subset of weights into a temporary map
 
 		for (List<String> key : weightSubsets.keySet()) {
 			costBased.put(key, weightSubsets.get(key));
@@ -370,10 +303,7 @@ public class Scp_main {
 		}
 
 		for (int j = 0; j < numberOfSubsets; ++j) {
-			// values = (List<Integer>) costBased.values();
-			// System.out.println(Collections.min(costBased.values()));
 
-			// List<Integer> test = (List<Integer>) costBased.values();
 			greedyValue = Collections.min(costBased.values());
 
 			for (List<String> key : costBased.keySet()) {
@@ -384,11 +314,11 @@ public class Scp_main {
 						order.put(j, key);
 
 						coverage.addAll(key);
-					}
-					costBased.remove(key);
-					break;
-				}
 
+						costBased.remove(key);
+						break;
+					}
+				}
 			}
 
 		}
@@ -397,106 +327,74 @@ public class Scp_main {
 		System.out.println(coverage.toString());
 	}
 
-	// //coverage = new HashSet<>();
-	// List<String> tempList = null;
-	// Map< List<String>, Integer> solution = new HashMap< List<String>,
-	// Integer>();
-	//// for (Integer key : order.keySet()) {
-	//// solution.put(key, order.get(key) );
-	//// }
-	//// System.out.println(solution);
-	// float WeigthSubset = 0F;
-	// int maxWeigthSubset = 0;
-	//
-	// for (List<String> o : order.values()) {
-	// WeigthSubset = weightSubsets.get(o);
-	//
-	// if( maxWeigthSubset < (int)WeigthSubset )
-	// {
-	// maxWeigthSubset= (int)WeigthSubset;
-	// tempList = o;
-	// }
-	// solution.put(o,(int)WeigthSubset);
-	// //System.out.println(solution);
-	// }
-	// //System.out.println(solution);
-	// for(int i = 0; i< solution.size(); ++i){
-	//
-	// maxWeigthSubset = Collections.max(solution.values());
-	// System.out.println(maxWeigthSubset);
-	// //tempList = solution.get(maxWeigthSubset);
-	// solution.remove(tempList);
-	// coverage.removeAll(tempList);
-	// System.out.println(coverage);
-	// if (!coverage.containsAll(tempList) ){
-	//
-	// solution.put( tempList, maxWeigthSubset);
-	// //solution.remove(tempList);
-	// coverage.addAll(tempList);
-	// System.out.println(solution);
-	// }
-	// }
-	// System.out.println(solution);
-
 	public static void redundancyElimination(Set<String> coverage) {
 
 		List<String> tempList = null;
 		Map<List<String>, Integer> solution = new HashMap<List<String>, Integer>();
+		Map<List<String>, Integer> copyOfsolution = new HashMap<List<String>, Integer>();
 
 		float WeigthSubset = 0F;
 		int max = 0;
+		System.out.println("ORDER????ZZZ" + order);
 
+		// copy of the obtained solution "order" into a local Map solution
 		for (List<String> o : order.values()) {
 			WeigthSubset = weightSubsets.get(o);
 			solution.put(o, (int) WeigthSubset);
+			copyOfsolution.put(o, (int) WeigthSubset);
 		}
+
+		System.out.println("BEFORE????ZZZ" + copyOfsolution);
 
 		for (List<String> set : order.values()) {
 			System.out.println(set);
 			int redundantElement = solution.get(set);
 			for (int i = 0; i < order.size(); ++i) {
 				if (set != order.get(i)) {
-					if (CollectionUtils.containsAny(order.get(i), set)) {
+					if (CollectionUtils.containsAny(set, order.get(i))) {
 						System.out.println(order.get(i));
 						max = Math.max(solution.get(order.get(i)), redundantElement);
 						System.out.println(max);
 						if (max == redundantElement) {
 							System.out.println("remove set");
 							tempList = set;
-							solution.remove(set);
+							copyOfsolution.remove(set);
+
 						} else {
 							System.out.println("remove B");
 							tempList = order.get(i);
-							solution.remove(order.get(i));
-						}
+							copyOfsolution.remove(order.get(i));
 
-						if (!coverage.containsAll(tempList)) {
-
-							solution.put(tempList, max);
-							// solution.remove(tempList);
-							coverage.addAll(tempList);
-							System.out.println(solution);
 						}
+						List<String> union = new ArrayList<>();
+					
+						for (List<String> redundantSet : copyOfsolution.keySet()) {
+							union = (List<String>) CollectionUtils.union(union, redundantSet);
+							
+						}
+						System.out.println("????ZZZ" + copyOfsolution);
+						System.out.println("+++++++" + union);
+
+						if(union.size() != numberOfElements){ // if the suppression of the set create a lack in the coverage
+							copyOfsolution.put(tempList, max);
+						}
+						/*
+						 * if (!coverage.containsAll(tempList)) {
+						 * 
+						 * copyOfsolution.put(tempList, max); //
+						 * solution.remove(tempList); coverage.addAll(tempList);
+						 * System.out.println("???"+copyOfsolution);
+						 * 
+						 * }
+						 */
+
 					}
 				}
 			}
 
 		}
-		// System.out.println(solution);
-		/*
-		 * for(int i = 0; i< solution.size(); ++i){
-		 * 
-		 * maxWeigthSubset = Collections.max(solution.values());
-		 * System.out.println(maxWeigthSubset); //tempList =
-		 * solution.get(maxWeigthSubset); solution.remove(tempList);
-		 * coverage.removeAll(tempList); System.out.println(coverage); if
-		 * (!coverage.containsAll(tempList) ){
-		 * 
-		 * solution.put( tempList, maxWeigthSubset);
-		 * //solution.remove(tempList); coverage.addAll(tempList);
-		 * System.out.println(solution); } }
-		 */
-		System.out.println(solution);
+		
+		System.out.println("ZZZ" + copyOfsolution);
 	}
 
 	public static int computeCost() {
